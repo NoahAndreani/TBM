@@ -1,26 +1,23 @@
 {
     "server": {
-        "port": "8080",
-        "host": "localhost"
+        "host": "localhost",
+        "port": "8080"
     },
     "database": {
-        "host": "localhost",
-        "port": "3306",
-        "user": "tbcvclub",
-        "password": "",
-        "dbname": "tbcvclub"
+        "type": "sqlite3",
+        "path": "data/tbcvclub.db"
     },
     "jwt": {
-        "secret": "votre_secret_jwt_ici",
+        "secret": "votre_secret_jwt_super_securise",
         "expiration_hours": 24
     },
     "api": {
-        "stations_endpoint": "http://10.33.70.223:3000/api/stations",
-        "news_endpoint": "http://10.33.70.223:3000/api/news"
+        "stations_endpoint": "http://localhost:3000/api/stations",
+        "news_endpoint": "http://localhost:3000/api/news"
     },
     "experience": {
-        "base_login_xp": 100,
-        "base_distance_xp": 10,
+        "base_login_xp": 10,
+        "base_distance_xp": 100,
         "base_time_xp": 1,
         "level_multiplier": 1000
     }

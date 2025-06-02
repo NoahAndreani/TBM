@@ -54,7 +54,7 @@ func GetSubscriptionPlans(w http.ResponseWriter, r *http.Request) {
 }
 
 type SubscribeRequest struct {
-	PlanID int `json:"plan_id"`
+	PlanID int64 `json:"plan_id"`
 }
 
 // Subscribe permet à un utilisateur de souscrire à un forfait

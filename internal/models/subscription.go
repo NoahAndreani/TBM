@@ -14,17 +14,17 @@ const (
 )
 
 type Subscription struct {
-	ID        int              `json:"id"`
-	UserID    int              `json:"user_id"`
-	Type      SubscriptionType `json:"type"`
-	StartDate time.Time        `json:"start_date"`
-	EndDate   time.Time        `json:"end_date"`
-	Price     float64          `json:"price"`
-	IsActive  bool             `json:"is_active"`
+	ID        int64            `json:"id" db:"id"`
+	UserID    int64            `json:"user_id" db:"user_id"`
+	Type      SubscriptionType `json:"type" db:"type"`
+	StartDate time.Time        `json:"start_date" db:"start_date"`
+	EndDate   time.Time        `json:"end_date" db:"end_date"`
+	Price     float64          `json:"price" db:"price"`
+	IsActive  bool             `json:"is_active" db:"is_active"`
 }
 
 type SubscriptionPlan struct {
-	ID          int              `json:"id"`
+	ID          int64            `json:"id"`
 	Type        SubscriptionType `json:"type"`
 	Name        string           `json:"name"`
 	Description string           `json:"description"`

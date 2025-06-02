@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"tbcvclub/configs"
+	"tbcvclub/internal/database"
 	"tbcvclub/internal/handlers"
 	"tbcvclub/internal/middleware"
 
@@ -12,10 +13,16 @@ import (
 )
 
 func main() {
-	// Chargement de la configuration
-	if err := configs.LoadConfig("configs/config.json"); err != nil {
-		log.Fatal("Error loading config:", err)
+	// Initialisation de la configuration
+	if err := configs.LoadConfig(); err != nil {
+		log.Fatalf("Erreur chargement config: %v", err)
 	}
+
+	// Initialisation de la base de données
+	if err := database.InitDB(configs.AppConfig.Database.Path); err != nil {
+		log.Fatalf("Erreur initialisation DB: %v", err)
+	}
+	defer database.Close()
 
 	r := mux.NewRouter()
 
@@ -30,8 +37,11 @@ func main() {
 	r.PathPrefix("/static/").Handler(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	// Routes publiques
-	r.HandleFunc("/register", handlers.Register).Methods("POST")
-	r.HandleFunc("/login", handlers.Login).Methods("POST")
+	r.HandleFunc("/", handlers.Home)
+	r.HandleFunc("/login", handlers.Login)
+	r.HandleFunc("/register", handlers.Register)
+	r.HandleFunc("/api/stations", handlers.GetStations)
+	r.HandleFunc("/api/news", handlers.GetNews)
 
 	// API Routes protégées
 	api := r.PathPrefix("/api").Subrouter()

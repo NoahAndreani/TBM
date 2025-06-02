@@ -1,12 +1,31 @@
 // Chargement initial
-document.addEventListener('DOMContentLoaded', () => {
-    if (!isAuthenticated) {
-        window.location.href = '/';
-        return;
-    }
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        // Attendre la vérification de l'authentification
+        if (!authToken) {
+            window.location.href = '/';
+            return;
+        }
 
-    loadProfile();
-    setupEventListeners();
+        // Tenter de charger le profil
+        const response = await fetch('/api/profile', {
+            headers: addAuthHeader()
+        });
+
+        if (!response.ok) {
+            // Si la requête échoue (token invalide ou expiré)
+            window.location.href = '/';
+            return;
+        }
+
+        // Si on arrive ici, l'utilisateur est authentifié
+        isAuthenticated = true;
+        loadProfile();
+        setupEventListeners();
+    } catch (error) {
+        console.error('Erreur de vérification d\'authentification:', error);
+        window.location.href = '/';
+    }
 });
 
 // Configuration des écouteurs d'événements

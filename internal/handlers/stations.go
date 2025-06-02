@@ -9,20 +9,41 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// GetStations récupère la liste de toutes les stations
-func GetStations(w http.ResponseWriter, r *http.Request) {
-	// Appel à l'API externe pour récupérer les stations
-	resp, err := http.Get("http://10.33.70.223:3000/api/stations")
-	if err != nil {
-		http.Error(w, "Erreur lors de la récupération des stations", http.StatusInternalServerError)
-		return
-	}
-	defer resp.Body.Close()
+type Station struct {
+	ID             int64   `json:"id"`
+	Name           string  `json:"name"`
+	Address        string  `json:"address"`
+	Latitude       float64 `json:"latitude"`
+	Longitude      float64 `json:"longitude"`
+	TotalSlots     int     `json:"totalSlots"`
+	AvailableBikes int     `json:"availableBikes"`
+	Status         string  `json:"status"`
+}
 
-	var stations []models.Station
-	if err := json.NewDecoder(resp.Body).Decode(&stations); err != nil {
-		http.Error(w, "Erreur lors du décodage des données", http.StatusInternalServerError)
-		return
+// GetStations renvoie la liste des stations
+func GetStations(w http.ResponseWriter, r *http.Request) {
+	// Pour l'instant, on renvoie des données de test
+	stations := []Station{
+		{
+			ID:             1,
+			Name:           "Station Pey Berland",
+			Address:        "Place Pey Berland",
+			Latitude:       44.837789,
+			Longitude:      -0.57918,
+			TotalSlots:     20,
+			AvailableBikes: 15,
+			Status:         "operational",
+		},
+		{
+			ID:             2,
+			Name:           "Station Quinconces",
+			Address:        "Place des Quinconces",
+			Latitude:       44.843849,
+			Longitude:      -0.574502,
+			TotalSlots:     30,
+			AvailableBikes: 8,
+			Status:         "operational",
+		},
 	}
 
 	w.Header().Set("Content-Type", "application/json")

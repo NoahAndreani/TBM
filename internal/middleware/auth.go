@@ -10,7 +10,7 @@ import (
 )
 
 type Claims struct {
-	UserID   int    `json:"user_id"`
+	UserID   int64  `json:"user_id"`
 	Username string `json:"username"`
 	jwt.RegisteredClaims
 }
@@ -60,8 +60,8 @@ func AuthMiddleware(next http.Handler) http.Handler {
 }
 
 // GetUserID récupère l'ID de l'utilisateur depuis le contexte
-func GetUserID(r *http.Request) (int, bool) {
-	userID, ok := r.Context().Value("user_id").(int)
+func GetUserID(r *http.Request) (int64, bool) {
+	userID, ok := r.Context().Value("user_id").(int64)
 	return userID, ok
 }
 
