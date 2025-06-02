@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Profil - TBC Vclub</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">TBC Vclub</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Accueil</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/stations">Stations</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/shop">Boutique</a>
+                    </li>
+                </ul>
+                <div class="navbar-nav" id="authButtons">
+                    <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Connexion</a>
+                    <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#registerModal">Inscription</a>
+                </div>
+                <div class="navbar-nav d-none" id="userMenu">
+                    <a class="nav-link active" href="/profile">Mon Profil</a>
+                    <a class="nav-link" href="#" onclick="logout()">Déconnexion</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenu principal -->
+    <div class="container mt-4">
+        <div class="row">
+            <!-- Informations du profil -->
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <div class="avatar-placeholder mb-2">
+                                <i class="bi bi-person-circle" style="font-size: 4rem;"></i>
+                            </div>
+                            <h5 class="card-title mb-0" id="username"></h5>
+                            <small class="text-muted" id="email"></small>
+                        </div>
+                        <hr>
+                        <div class="mb-3">
+                            <label class="form-label">Dernière connexion</label>
+                            <p class="mb-0" id="lastConnection"></p>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Membre depuis</label>
+                            <p class="mb-0" id="memberSince"></p>
+                        </div>
+                        <button class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                            Modifier le profil
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Niveau et expérience -->
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Niveau et Expérience</h5>
+                        <div class="level-info mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h2 class="mb-0">Niveau <span id="currentLevel"></span></h2>
+                                <span class="badge bg-primary" id="experiencePoints"></span>
+                            </div>
+                            <div class="progress mb-2">
+                                <div class="progress-bar" id="experienceBar" role="progressbar"></div>
+                            </div>
+                            <small class="text-muted" id="experienceToNext"></small>
+                        </div>
+                        <hr>
+                        <h6>Récompenses du niveau</h6>
+                        <ul class="list-unstyled" id="levelRewards">
+                            <!-- Les récompenses seront ajoutées dynamiquement -->
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Statistiques -->
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Statistiques</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="stat-card">
+                                    <i class="bi bi-bicycle me-2"></i>
+                                    <span>Distance totale</span>
+                                    <h3 id="totalDistance">0 km</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="stat-card">
+                                    <i class="bi bi-clock-history me-2"></i>
+                                    <span>Temps total</span>
+                                    <h3 id="totalTime">0h</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="stat-card">
+                                    <i class="bi bi-calendar-check me-2"></i>
+                                    <span>Jours consécutifs</span>
+                                    <h3 id="consecutiveDays">0</h3>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="stat-card">
+                                    <i class="bi bi-trophy me-2"></i>
+                                    <span>Bonus actif</span>
+                                    <h3 id="activeBonus">-</h3>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de modification du profil -->
+    <div class="modal fade" id="editProfileModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Modifier le profil</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editProfileForm">
+                        <div class="mb-3">
+                            <label for="editUsername" class="form-label">Nom d'utilisateur</label>
+                            <input type="text" class="form-control" id="editUsername">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="editEmail">
+                        </div>
+                        <div class="mb-3">
+                            <label for="editPassword" class="form-label">Nouveau mot de passe (optionnel)</label>
+                            <input type="password" class="form-control" id="editPassword">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Enregistrer</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals de connexion et d'inscription -->
+    <!-- Modal de connexion -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Connexion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label for="loginEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="loginEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="loginPassword" class="form-label">Mot de passe</label>
+                            <input type="password" class="form-control" id="loginPassword" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Se connecter</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal d'inscription -->
+    <div class="modal fade" id="registerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Inscription</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="registerForm">
+                        <div class="mb-3">
+                            <label for="registerUsername" class="form-label">Nom d'utilisateur</label>
+                            <input type="text" class="form-control" id="registerUsername" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="registerEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="registerEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="registerPassword" class="form-label">Mot de passe</label>
+                            <input type="password" class="form-control" id="registerPassword" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">S'inscrire</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/profile.js"></script>
+</body>
+</html> 

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stations - TBC Vclub</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/">TBC Vclub</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/">Accueil</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="/stations">Stations</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/shop">Boutique</a>
+                    </li>
+                </ul>
+                <div class="navbar-nav" id="authButtons">
+                    <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Connexion</a>
+                    <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#registerModal">Inscription</a>
+                </div>
+                <div class="navbar-nav d-none" id="userMenu">
+                    <a class="nav-link" href="/profile">Mon Profil</a>
+                    <a class="nav-link" href="#" onclick="logout()">Déconnexion</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenu principal -->
+    <div class="container mt-4">
+        <!-- Filtres et recherche -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input type="text" class="form-control" id="searchStation" placeholder="Rechercher une station...">
+                    <button class="btn btn-outline-primary" type="button" id="searchButton">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="btn-group float-end" role="group">
+                    <button type="button" class="btn btn-outline-primary active" data-view="list">
+                        <i class="bi bi-list"></i> Liste
+                    </button>
+                    <button type="button" class="btn btn-outline-primary" data-view="grid">
+                        <i class="bi bi-grid"></i> Grille
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Liste des stations -->
+        <div class="row" id="stationsList">
+            <!-- Les stations seront ajoutées dynamiquement ici -->
+        </div>
+
+        <!-- Template pour l'affichage en liste -->
+        <template id="stationListTemplate">
+            <div class="col-12 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <h5 class="card-title"></h5>
+                                <p class="card-text address"></p>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="availability">
+                                    <div class="progress mb-2">
+                                        <div class="progress-bar" role="progressbar"></div>
+                                    </div>
+                                    <small class="text-muted bikes-info"></small>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stats">
+                                    <p class="mb-1 popularity"></p>
+                                    <p class="mb-1 peak-hours"></p>
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="status-badge"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- Template pour l'affichage en grille -->
+        <template id="stationGridTemplate">
+            <div class="col-md-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h5 class="card-title"></h5>
+                        <p class="card-text address"></p>
+                        <div class="availability mb-3">
+                            <div class="progress mb-2">
+                                <div class="progress-bar" role="progressbar"></div>
+                            </div>
+                            <small class="text-muted bikes-info"></small>
+                        </div>
+                        <div class="stats">
+                            <p class="mb-1 popularity"></p>
+                            <p class="mb-1 peak-hours"></p>
+                        </div>
+                        <div class="status-badge mt-2"></div>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <!-- Modals de connexion et d'inscription -->
+    <!-- Modal de connexion -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Connexion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="loginForm">
+                        <div class="mb-3">
+                            <label for="loginEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="loginEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="loginPassword" class="form-label">Mot de passe</label>
+                            <input type="password" class="form-control" id="loginPassword" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Se connecter</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal d'inscription -->
+    <div class="modal fade" id="registerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Inscription</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="registerForm">
+                        <div class="mb-3">
+                            <label for="registerUsername" class="form-label">Nom d'utilisateur</label>
+                            <input type="text" class="form-control" id="registerUsername" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="registerEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="registerEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="registerPassword" class="form-label">Mot de passe</label>
+                            <input type="password" class="form-control" id="registerPassword" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">S'inscrire</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/auth.js"></script>
+    <script src="/static/js/stations-list.js"></script>
+</body>
+</html> 

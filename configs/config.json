@@ -1,0 +1,27 @@
+{
+    "server": {
+        "port": "8080",
+        "host": "localhost"
+    },
+    "database": {
+        "host": "localhost",
+        "port": "3306",
+        "user": "tbcvclub",
+        "password": "",
+        "dbname": "tbcvclub"
+    },
+    "jwt": {
+        "secret": "votre_secret_jwt_ici",
+        "expiration_hours": 24
+    },
+    "api": {
+        "stations_endpoint": "http://10.33.70.223:3000/api/stations",
+        "news_endpoint": "http://10.33.70.223:3000/api/news"
+    },
+    "experience": {
+        "base_login_xp": 100,
+        "base_distance_xp": 10,
+        "base_time_xp": 1,
+        "level_multiplier": 1000
+    }
+} 
