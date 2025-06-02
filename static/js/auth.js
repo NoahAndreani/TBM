@@ -1,15 +1,155 @@
-// Gestion de l'état de connexion
+// Variables globales
 let isAuthenticated = false;
-let authToken = localStorage.getItem('authToken');
 let currentUser = null;
 
-// Initialisation des modals
-let loginModal;
-let registerModal;
+// Initialisation au chargement de la page
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Initialisation de l\'application...');
 
-// Vérifie si l'utilisateur est déjà connecté au chargement de la page
-if (authToken) {
-    fetchUserProfile();
+    // Vérification du token et mise à jour de l'interface
+    const token = localStorage.getItem('token');
+    if (token) {
+        updateAuthUI(true);
+    }
+
+    // Ajout des gestionnaires d'événements pour les formulaires
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
+
+    if (loginForm) {
+        loginForm.addEventListener('submit', handleLogin);
+    }
+
+    if (registerForm) {
+        registerForm.addEventListener('submit', handleRegister);
+    }
+});
+
+// Fonction de connexion
+async function handleLogin(event) {
+    event.preventDefault();
+    console.log('Tentative de connexion...');
+    
+    const username = document.getElementById('loginUsername').value;
+    const password = document.getElementById('loginPassword').value;
+    const errorDiv = document.getElementById('loginError');
+    
+    try {
+        const response = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username, password })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Stockage du token
+            localStorage.setItem('token', data.token);
+            // Fermeture du modal
+            const modal = document.getElementById('loginModal');
+            const bsModal = bootstrap.Modal.getInstance(modal);
+            if (bsModal) {
+                bsModal.hide();
+            }
+            // Mise à jour de l'interface
+            updateAuthUI(true);
+            // Redirection vers la page d'accueil
+            window.location.href = '/';
+        } else {
+            errorDiv.textContent = data.error || 'Erreur de connexion';
+            errorDiv.classList.remove('d-none');
+        }
+    } catch (error) {
+        console.error('Erreur de connexion:', error);
+        errorDiv.textContent = 'Erreur de connexion au serveur';
+        errorDiv.classList.remove('d-none');
+    }
+}
+
+// Fonction d'inscription
+async function handleRegister(event) {
+    event.preventDefault();
+    console.log('Tentative d\'inscription...');
+    
+    const username = document.getElementById('registerUsername').value;
+    const email = document.getElementById('registerEmail').value;
+    const password = document.getElementById('registerPassword').value;
+    const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
+    const errorDiv = document.getElementById('registerError');
+
+    // Validation côté client
+    if (password !== passwordConfirm) {
+        errorDiv.textContent = 'Les mots de passe ne correspondent pas';
+        errorDiv.classList.remove('d-none');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                username, 
+                email, 
+                password 
+            })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Fermeture du modal d'inscription
+            const registerModal = document.getElementById('registerModal');
+            const bsRegisterModal = bootstrap.Modal.getInstance(registerModal);
+            if (bsRegisterModal) {
+                bsRegisterModal.hide();
+            }
+
+            // Préparation du modal de connexion
+            const loginError = document.getElementById('loginError');
+            loginError.textContent = 'Inscription réussie ! Vous pouvez maintenant vous connecter.';
+            loginError.classList.remove('d-none', 'alert-danger');
+            loginError.classList.add('alert-success');
+
+            // Ouverture du modal de connexion
+            const loginModal = document.getElementById('loginModal');
+            const bsLoginModal = new bootstrap.Modal(loginModal);
+            bsLoginModal.show();
+        } else {
+            errorDiv.textContent = data.error || 'Erreur lors de l\'inscription';
+            errorDiv.classList.remove('d-none');
+        }
+    } catch (error) {
+        console.error('Erreur d\'inscription:', error);
+        errorDiv.textContent = 'Erreur de connexion au serveur';
+        errorDiv.classList.remove('d-none');
+    }
+}
+
+// Fonction de déconnexion
+function logout() {
+    localStorage.removeItem('token');
+    updateAuthUI(false);
+    window.location.href = '/';
+}
+
+// Mise à jour de l'interface utilisateur
+function updateAuthUI(isLoggedIn = false) {
+    const authButtons = document.getElementById('authButtons');
+    const userMenu = document.getElementById('userMenu');
+    
+    if (isLoggedIn) {
+        authButtons.classList.add('d-none');
+        userMenu.classList.remove('d-none');
+    } else {
+        authButtons.classList.remove('d-none');
+        userMenu.classList.add('d-none');
+    }
 }
 
 // Validation côté client
@@ -47,142 +187,6 @@ const validators = {
         return null;
     }
 };
-
-// Initialisation des formulaires d'authentification
-document.addEventListener('DOMContentLoaded', () => {
-    // Initialisation des modals
-    loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
-    registerModal = new bootstrap.Modal(document.getElementById('registerModal'));
-
-    // Gestion du formulaire de connexion
-    const loginForm = document.getElementById('loginForm');
-    if (loginForm) {
-        loginForm.addEventListener('submit', handleLogin);
-    }
-
-    // Gestion du formulaire d'inscription
-    const registerForm = document.getElementById('registerForm');
-    if (registerForm) {
-        registerForm.addEventListener('submit', handleRegister);
-    }
-
-    // Mise à jour initiale de l'interface
-    updateUIAuth();
-});
-
-// Fonction de connexion
-async function handleLogin(event) {
-    event.preventDefault();
-    
-    const username = document.getElementById('loginUsername').value;
-    const password = document.getElementById('loginPassword').value;
-    const errorDiv = document.getElementById('loginError');
-    
-    try {
-        const response = await fetch('/api/auth/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ username, password })
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            // Stockage du token
-            localStorage.setItem('token', data.token);
-            // Fermeture du modal
-            loginModal.hide();
-            // Mise à jour de l'interface
-            updateAuthUI(true);
-            // Redirection vers la page d'accueil
-            window.location.href = '/';
-        } else {
-            errorDiv.textContent = data.error || 'Erreur de connexion';
-            errorDiv.classList.remove('d-none');
-        }
-    } catch (error) {
-        errorDiv.textContent = 'Erreur de connexion au serveur';
-        errorDiv.classList.remove('d-none');
-    }
-}
-
-// Fonction d'inscription
-async function handleRegister(event) {
-    event.preventDefault();
-    
-    const username = document.getElementById('registerUsername').value;
-    const email = document.getElementById('registerEmail').value;
-    const password = document.getElementById('registerPassword').value;
-    const passwordConfirm = document.getElementById('registerPasswordConfirm').value;
-    const errorDiv = document.getElementById('registerError');
-
-    // Validation côté client
-    if (password !== passwordConfirm) {
-        errorDiv.textContent = 'Les mots de passe ne correspondent pas';
-        errorDiv.classList.remove('d-none');
-        return;
-    }
-
-    if (!/^[a-zA-Z0-9]{3,20}$/.test(username)) {
-        errorDiv.textContent = 'Le nom d\'utilisateur doit contenir entre 3 et 20 caractères alphanumériques';
-        errorDiv.classList.remove('d-none');
-        return;
-    }
-
-    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/.test(password)) {
-        errorDiv.textContent = 'Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule et un chiffre';
-        errorDiv.classList.remove('d-none');
-        return;
-    }
-
-    try {
-        const response = await fetch('/api/auth/register', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ username, email, password })
-        });
-
-        const data = await response.json();
-
-        if (response.ok) {
-            // Fermeture du modal d'inscription
-            registerModal.hide();
-            // Ouverture du modal de connexion
-            loginModal.show();
-        } else {
-            errorDiv.textContent = data.error || 'Erreur lors de l\'inscription';
-            errorDiv.classList.remove('d-none');
-        }
-    } catch (error) {
-        errorDiv.textContent = 'Erreur de connexion au serveur';
-        errorDiv.classList.remove('d-none');
-    }
-}
-
-// Fonction de déconnexion
-function logout() {
-    localStorage.removeItem('token');
-    updateAuthUI(false);
-    window.location.href = '/';
-}
-
-// Mise à jour de l'interface utilisateur en fonction de l'état de connexion
-function updateAuthUI(isLoggedIn) {
-    const authButtons = document.getElementById('authButtons');
-    const userMenu = document.getElementById('userMenu');
-    
-    if (isLoggedIn) {
-        authButtons.classList.add('d-none');
-        userMenu.classList.remove('d-none');
-    } else {
-        authButtons.classList.remove('d-none');
-        userMenu.classList.add('d-none');
-    }
-}
 
 // Vérification de l'état de connexion au chargement de la page
 document.addEventListener('DOMContentLoaded', function() {

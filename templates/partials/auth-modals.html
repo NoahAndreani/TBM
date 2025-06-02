@@ -18,7 +18,10 @@
                         <input type="password" class="form-control" id="loginPassword" required>
                     </div>
                     <div class="alert alert-danger d-none" id="loginError"></div>
-                    <button type="submit" class="btn btn-primary">Se connecter</button>
+                    <div class="modal-footer px-0 pb-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                        <button type="submit" class="btn btn-primary">Se connecter</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -37,8 +40,10 @@
                 <form id="registerForm" onsubmit="return handleRegister(event)">
                     <div class="mb-3">
                         <label for="registerUsername" class="form-label">Nom d'utilisateur</label>
-                        <input type="text" class="form-control" id="registerUsername" required>
-                        <div class="form-text">Lettres et chiffres uniquement, 3-20 caractères</div>
+                        <input type="text" class="form-control" id="registerUsername" required 
+                               pattern="[a-zA-Z0-9_]{3,20}" 
+                               title="3 à 20 caractères : lettres, chiffres et underscore uniquement">
+                        <div class="form-text">Lettres, chiffres et underscore uniquement (3-20 caractères)</div>
                     </div>
                     <div class="mb-3">
                         <label for="registerEmail" class="form-label">Email</label>
@@ -46,15 +51,20 @@
                     </div>
                     <div class="mb-3">
                         <label for="registerPassword" class="form-label">Mot de passe</label>
-                        <input type="password" class="form-control" id="registerPassword" required>
-                        <div class="form-text">8 caractères minimum, une majuscule, une minuscule, un chiffre</div>
+                        <input type="password" class="form-control" id="registerPassword" required
+                               pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$"
+                               title="8 caractères minimum, avec au moins : 1 majuscule, 1 minuscule, 1 chiffre">
+                        <div class="form-text">8 caractères minimum avec : 1 majuscule, 1 minuscule, 1 chiffre</div>
                     </div>
                     <div class="mb-3">
                         <label for="registerPasswordConfirm" class="form-label">Confirmer le mot de passe</label>
                         <input type="password" class="form-control" id="registerPasswordConfirm" required>
                     </div>
                     <div class="alert alert-danger d-none" id="registerError"></div>
-                    <button type="submit" class="btn btn-primary">S'inscrire</button>
+                    <div class="modal-footer px-0 pb-0">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                        <button type="submit" class="btn btn-primary">S'inscrire</button>
+                    </div>
                 </form>
             </div>
         </div>
