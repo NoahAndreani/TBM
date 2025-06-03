@@ -1,25 +1,67 @@
+// Fonctions d'authentification
+function getAuthToken() {
+    return localStorage.getItem('token');
+}
+
+function addAuthHeader() {
+    return {
+        'Authorization': `Bearer ${getAuthToken()}`
+    };
+}
+
+// Fonction pour vérifier si l'authentification est prête
+function waitForAuth() {
+    return new Promise((resolve) => {
+        // Si authToken est déjà défini, on résout immédiatement
+        if (typeof window.authToken !== 'undefined') {
+            resolve();
+            return;
+        }
+
+        // Sinon, on vérifie toutes les 100ms jusqu'à ce que ce soit prêt
+        const checkAuth = setInterval(() => {
+            if (typeof window.authToken !== 'undefined') {
+                clearInterval(checkAuth);
+                resolve();
+            }
+        }, 100);
+
+        // On arrête de vérifier après 5 secondes
+        setTimeout(() => {
+            clearInterval(checkAuth);
+            resolve();
+        }, 5000);
+    });
+}
+
 // Chargement initial
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        // Attendre la vérification de l'authentification
-        if (!authToken) {
+        // Attendre que l'authentification soit prête
+        await waitForAuth();
+
+        // Récupération du token d'authentification
+        if (!window.authToken) {
+            console.log('Aucun token trouvé, redirection vers la page d\'accueil');
             window.location.href = '/';
             return;
         }
 
         // Tenter de charger le profil
         const response = await fetch('/api/profile', {
-            headers: addAuthHeader()
+            headers: window.addAuthHeader()
         });
 
         if (!response.ok) {
             // Si la requête échoue (token invalide ou expiré)
+            console.log('Token invalide ou expiré, redirection vers la page d\'accueil');
+            localStorage.removeItem('token');
+            window.authToken = null;
             window.location.href = '/';
             return;
         }
 
         // Si on arrive ici, l'utilisateur est authentifié
-        isAuthenticated = true;
         loadProfile();
         setupEventListeners();
     } catch (error) {
@@ -40,7 +82,7 @@ function setupEventListeners() {
 async function loadProfile() {
     try {
         const response = await fetch('/api/profile', {
-            headers: addAuthHeader()
+            headers: window.addAuthHeader()
         });
 
         if (!response.ok) {
@@ -52,7 +94,7 @@ async function loadProfile() {
 
         // Chargement des statistiques
         const statsResponse = await fetch('/api/profile/stats', {
-            headers: addAuthHeader()
+            headers: window.addAuthHeader()
         });
 
         if (statsResponse.ok) {
@@ -174,7 +216,7 @@ async function updateProfile() {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
-                ...addAuthHeader()
+                ...window.addAuthHeader()
             },
             body: JSON.stringify({
                 username,

@@ -1,14 +1,22 @@
 // Variables globales
-let isAuthenticated = false;
-let currentUser = null;
+window.isAuthenticated = false;
+window.currentUser = null;
+window.authToken = localStorage.getItem('token');
+
+// Fonction pour ajouter l'en-tête d'authentification
+window.addAuthHeader = function() {
+    return {
+        'Authorization': `Bearer ${window.authToken}`
+    };
+};
 
 // Initialisation au chargement de la page
 document.addEventListener('DOMContentLoaded', function() {
     console.log('Initialisation de l\'application...');
 
     // Vérification du token et mise à jour de l'interface
-    const token = localStorage.getItem('token');
-    if (token) {
+    window.authToken = localStorage.getItem('token');
+    if (window.authToken) {
         updateAuthUI(true);
     }
 
@@ -47,6 +55,7 @@ async function handleLogin(event) {
 
         if (response.ok) {
             // Stockage du token
+            window.authToken = data.token;
             localStorage.setItem('token', data.token);
             // Fermeture du modal
             const modal = document.getElementById('loginModal');
@@ -132,11 +141,12 @@ async function handleRegister(event) {
 }
 
 // Fonction de déconnexion
-function logout() {
+window.logout = function() {
     localStorage.removeItem('token');
+    window.authToken = null;
     updateAuthUI(false);
     window.location.href = '/';
-}
+};
 
 // Mise à jour de l'interface utilisateur
 function updateAuthUI(isLoggedIn = false) {
@@ -242,7 +252,7 @@ async function fetchUserProfile() {
     try {
         const response = await fetch('/api/profile', {
             headers: {
-                'Authorization': `Bearer ${authToken}`
+                'Authorization': `Bearer ${window.authToken}`
             }
         });
 
@@ -250,12 +260,12 @@ async function fetchUserProfile() {
             throw new Error('Session expirée');
         }
 
-        currentUser = await response.json();
-        isAuthenticated = true;
+        window.currentUser = await response.json();
+        window.isAuthenticated = true;
         updateUIAuth();
     } catch (error) {
         console.error('Erreur lors de la récupération du profil:', error);
-        logout();
+        window.logout();
     }
 }
 
@@ -266,11 +276,11 @@ function updateUIAuth() {
     const userMenuUsername = document.getElementById('userMenuUsername');
 
     if (authButtons && userMenu) {
-        if (isAuthenticated && currentUser) {
+        if (window.isAuthenticated && window.currentUser) {
             authButtons.classList.add('d-none');
             userMenu.classList.remove('d-none');
             if (userMenuUsername) {
-                userMenuUsername.textContent = currentUser.username;
+                userMenuUsername.textContent = window.currentUser.username;
             }
         } else {
             authButtons.classList.remove('d-none');
