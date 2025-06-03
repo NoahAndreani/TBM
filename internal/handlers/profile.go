@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
+	"tbcvclub/internal/database"
 	"tbcvclub/internal/middleware"
 	"tbcvclub/internal/models"
 )
@@ -21,16 +23,17 @@ func GetProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Récupérer l'utilisateur depuis la base de données
-	// Pour l'exemple, on simule un utilisateur
-	user := models.User{
-		ID:            userID,
-		Username:      "test_user",
-		Email:         "test@example.com",
-		Level:         5,
-		Experience:    2500,
-		TotalDistance: 150.5,
-		TotalRideTime: 720, // 12 heures
+	// Récupération de l'utilisateur depuis la base de données
+	user, err := database.GetUserByID(userID)
+	if err != nil {
+		log.Printf("Erreur lors de la récupération de l'utilisateur: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	if user == nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -51,12 +54,55 @@ func UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Mettre à jour l'utilisateur dans la base de données
-	// Pour l'exemple, on simule la mise à jour
-	user := models.User{
-		ID:       userID,
-		Username: req.Username,
-		Email:    req.Email,
+	// Récupération de l'utilisateur actuel
+	user, err := database.GetUserByID(userID)
+	if err != nil {
+		log.Printf("Erreur lors de la récupération de l'utilisateur: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	if user == nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
+	}
+
+	// Mise à jour des champs si fournis
+	if req.Username != "" {
+		// Vérifier si le nom d'utilisateur est déjà pris
+		existingUser, err := database.GetUserByUsername(req.Username)
+		if err != nil {
+			log.Printf("Erreur lors de la vérification du nom d'utilisateur: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+		if existingUser != nil && existingUser.ID != userID {
+			http.Error(w, "Username already taken", http.StatusConflict)
+			return
+		}
+		user.Username = req.Username
+	}
+
+	if req.Email != "" {
+		// Vérifier si l'email est déjà utilisé
+		existingUser, err := database.GetUserByEmail(req.Email)
+		if err != nil {
+			log.Printf("Erreur lors de la vérification de l'email: %v", err)
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			return
+		}
+		if existingUser != nil && existingUser.ID != userID {
+			http.Error(w, "Email already in use", http.StatusConflict)
+			return
+		}
+		user.Email = req.Email
+	}
+
+	// Mise à jour dans la base de données
+	if err := database.UpdateUser(user); err != nil {
+		log.Printf("Erreur lors de la mise à jour de l'utilisateur: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -71,14 +117,17 @@ func GetProfileStats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Récupérer les statistiques depuis la base de données
-	// Pour l'exemple, on simule les statistiques
-	user := models.User{
-		ID:            userID,
-		Level:         5,
-		Experience:    2500,
-		TotalDistance: 150.5,
-		TotalRideTime: 720,
+	// Récupération de l'utilisateur depuis la base de données
+	user, err := database.GetUserByID(userID)
+	if err != nil {
+		log.Printf("Erreur lors de la récupération de l'utilisateur: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	if user == nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
 	}
 
 	stats := models.UserStats{
@@ -87,7 +136,7 @@ func GetProfileStats(w http.ResponseWriter, r *http.Request) {
 		ExperienceToNext: user.ExperienceForNextLevel(),
 		TotalDistance:    user.TotalDistance,
 		TotalRideTime:    user.TotalRideTime,
-		ConsecutiveDays:  5,
+		ConsecutiveDays:  user.ConsecutiveDays,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -113,19 +162,28 @@ func AddRideStats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Récupérer l'utilisateur depuis la base de données
-	user := models.User{
-		ID:            userID,
-		Level:         5,
-		Experience:    2500,
-		TotalDistance: 150.5,
-		TotalRideTime: 720,
+	// Récupération de l'utilisateur depuis la base de données
+	user, err := database.GetUserByID(userID)
+	if err != nil {
+		log.Printf("Erreur lors de la récupération de l'utilisateur: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
+
+	if user == nil {
+		http.Error(w, "User not found", http.StatusNotFound)
+		return
 	}
 
 	// Ajout des statistiques de la course
 	user.AddRideExperience(stats.Distance, stats.Time)
 
-	// TODO: Sauvegarder les modifications dans la base de données
+	// Sauvegarde des modifications dans la base de données
+	if err := database.UpdateUser(user); err != nil {
+		log.Printf("Erreur lors de la mise à jour des statistiques: %v", err)
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(user)
