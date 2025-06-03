@@ -68,6 +68,20 @@ func main() {
 	api.HandleFunc("/profile/stats", handlers.GetProfileStats).Methods("GET")
 	api.HandleFunc("/profile/ride", handlers.AddRideStats).Methods("POST")
 
+	// Routes d'administration
+	adminRouter := r.PathPrefix("/admin").Subrouter()
+	adminRouter.Use(middleware.AuthMiddleware)
+	adminRouter.Use(middleware.AdminMiddleware)
+
+	// Route pour la page HTML d'administration
+	adminRouter.HandleFunc("", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "templates/admin.html")
+	}).Methods("GET")
+
+	// Routes API d'administration
+	adminRouter.HandleFunc("/users", handlers.GetAllUsers).Methods("GET")
+	adminRouter.HandleFunc("/users/{id}", handlers.DeleteUser).Methods("DELETE")
+
 	// Pages principales
 	r.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "templates/index.html")
@@ -84,12 +98,6 @@ func main() {
 	r.HandleFunc("/profile", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "templates/profile.html")
 	}).Methods("GET")
-
-	// Handler 404 personnalisé
-	r.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusNotFound)
-		http.ServeFile(w, r, "templates/404.html")
-	})
 
 	// Démarrage du serveur
 	addr := configs.AppConfig.Server.Host + ":" + configs.AppConfig.Server.Port

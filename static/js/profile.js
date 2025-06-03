@@ -78,19 +78,26 @@ function setupEventListeners() {
     });
 }
 
-// Chargement du profil
+// Fonction pour charger le profil de l'utilisateur
 async function loadProfile() {
     try {
         const response = await fetch('/api/profile', {
-            headers: window.addAuthHeader()
+            headers: {
+                'Authorization': `Bearer ${window.authToken}`
+            }
         });
 
         if (!response.ok) {
             throw new Error('Erreur lors du chargement du profil');
         }
 
-        const profile = await response.json();
-        displayProfile(profile);
+        const user = await response.json();
+        displayProfile(user);
+
+        // Afficher le bouton d'administration si l'utilisateur est admin
+        if (user.role === 'admin') {
+            document.getElementById('adminSection').classList.remove('d-none');
+        }
 
         // Chargement des statistiques
         const statsResponse = await fetch('/api/profile/stats', {
@@ -107,30 +114,45 @@ async function loadProfile() {
     }
 }
 
-// Affichage des informations du profil
-function displayProfile(profile) {
-    document.getElementById('username').textContent = profile.username;
-    document.getElementById('email').textContent = profile.email;
+// Fonction pour afficher les informations du profil
+function displayProfile(user) {
+    document.getElementById('username').textContent = user.username;
+    document.getElementById('email').textContent = user.email;
+    document.getElementById('currentLevel').textContent = user.level;
+    document.getElementById('experiencePoints').textContent = `${user.experience} XP`;
+    
+    // Calculer la progression vers le niveau suivant
+    const expForNextLevel = user.level * 1000;
+    const progress = (user.experience / expForNextLevel) * 100;
+    document.getElementById('experienceBar').style.width = `${progress}%`;
+    document.getElementById('experienceBar').setAttribute('aria-valuenow', progress);
+    
+    // Afficher les statistiques
+    document.getElementById('totalDistance').textContent = `${user.total_distance.toFixed(2)} km`;
+    document.getElementById('totalTime').textContent = formatTime(user.total_ride_time);
+    document.getElementById('consecutiveDays').textContent = user.consecutive_days;
 
-    const lastConnection = new Date(profile.last_connection);
-    document.getElementById('lastConnection').textContent = lastConnection.toLocaleDateString('fr-FR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-
-    const memberSince = new Date(profile.created_at);
-    document.getElementById('memberSince').textContent = memberSince.toLocaleDateString('fr-FR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-    });
+    // Afficher les dates
+    document.getElementById('lastConnection').textContent = new Date(user.last_connection).toLocaleString();
+    document.getElementById('memberSince').textContent = new Date(user.created_at).toLocaleString();
 
     // Pré-remplissage du formulaire de modification
-    document.getElementById('editUsername').value = profile.username;
-    document.getElementById('editEmail').value = profile.email;
+    document.getElementById('editUsername').value = user.username;
+    document.getElementById('editEmail').value = user.email;
+
+    // Afficher l'expérience restante pour le niveau suivant
+    document.getElementById('experienceToNext').textContent = 
+        `${expForNextLevel - user.experience} XP pour le niveau suivant`;
+
+    // Afficher les récompenses du niveau
+    displayLevelRewards(user.level);
+}
+
+// Fonction pour formater le temps en heures et minutes
+function formatTime(minutes) {
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    return `${hours}h ${mins}min`;
 }
 
 // Affichage des statistiques

@@ -135,66 +135,74 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// Login gère la connexion d'un utilisateur
+// LoginHandler gère la connexion des utilisateurs
 func Login(w http.ResponseWriter, r *http.Request) {
-	var req LoginRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		sendError(w, "Format de requête invalide", nil, http.StatusBadRequest)
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	// Validation du nom d'utilisateur
-	if !utils.ValidateUsername(req.Username) {
-		sendError(w, "Format de nom d'utilisateur invalide", nil, http.StatusBadRequest)
+	var credentials struct {
+		Username string `json:"username"`
+		Password string `json:"password"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&credentials); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	log.Printf("Tentative de connexion pour l'utilisateur: %s", req.Username)
-
-	// Récupération de l'utilisateur depuis la base de données
-	user, err := database.GetUserByUsername(req.Username)
+	user, err := database.GetUserByUsername(credentials.Username)
 	if err != nil {
-		log.Printf("Erreur récupération utilisateur: %v", err)
-		sendError(w, "Erreur serveur", nil, http.StatusInternalServerError)
-		return
-	}
-	if user == nil {
-		sendError(w, "Nom d'utilisateur ou mot de passe incorrect", nil, http.StatusUnauthorized)
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}
 
-	// Vérification du mot de passe
-	if err := bcrypt.CompareHashAndPassword([]byte(user.HashedPassword), []byte(req.Password)); err != nil {
-		log.Printf("Mot de passe incorrect pour l'utilisateur: %s", req.Username)
-		sendError(w, "Nom d'utilisateur ou mot de passe incorrect", nil, http.StatusUnauthorized)
+	if err := bcrypt.CompareHashAndPassword([]byte(user.HashedPassword), []byte(credentials.Password)); err != nil {
+		http.Error(w, "Invalid credentials", http.StatusUnauthorized)
 		return
 	}
 
-	log.Printf("Connexion réussie pour l'utilisateur: %s", req.Username)
-
-	// Mise à jour de la dernière connexion et ajout de l'expérience
-	user.LastConnection = time.Now()
-	user.AddDailyLoginExperience()
-
-	// Sauvegarde des modifications
-	if err := database.UpdateUser(user); err != nil {
-		log.Printf("Erreur mise à jour utilisateur: %v", err)
-		sendError(w, "Erreur lors de la mise à jour du profil", nil, http.StatusInternalServerError)
-		return
+	// Créer le token JWT
+	claims := &middleware.Claims{
+		UserID:   user.ID,
+		Username: user.Username,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
 	}
 
-	// Génération du token JWT
-	token, err := generateToken(user)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString([]byte(configs.AppConfig.JWT.Secret))
 	if err != nil {
-		log.Printf("Erreur génération token: %v", err)
-		sendError(w, "Erreur lors de la génération du token", nil, http.StatusInternalServerError)
+		http.Error(w, "Error generating token", http.StatusInternalServerError)
 		return
 	}
 
-	sendJSON(w, AuthResponse{
-		Token: token,
-		User:  *user,
+	// Stocker le token dans un cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:     "auth_token",
+		Value:    tokenString,
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false, // Mettre à true en production avec HTTPS
+		SameSite: http.SameSiteLaxMode,
+		MaxAge:   86400, // 24 heures
 	})
+
+	// Renvoyer également le token dans la réponse JSON pour les clients API
+	response := map[string]interface{}{
+		"token": tokenString,
+		"user": map[string]interface{}{
+			"id":       user.ID,
+			"username": user.Username,
+			"role":     user.Role,
+		},
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 // generateToken génère un token JWT pour l'utilisateur

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strings"
 	"tbcvclub/configs"
+	"tbcvclub/internal/database"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -18,36 +19,47 @@ type Claims struct {
 // AuthMiddleware vérifie le token JWT et ajoute les informations de l'utilisateur au contexte
 func AuthMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var tokenString string
+
+		// Vérifier d'abord le header Authorization
 		authHeader := r.Header.Get("Authorization")
-		if authHeader == "" {
-			http.Error(w, "Authorization header required", http.StatusUnauthorized)
+		if authHeader != "" {
+			bearerToken := strings.Split(authHeader, " ")
+			if len(bearerToken) == 2 {
+				tokenString = bearerToken[1]
+			}
+		}
+
+		// Si pas de token dans le header, vérifier le cookie
+		if tokenString == "" {
+			cookie, err := r.Cookie("auth_token")
+			if err == nil {
+				tokenString = cookie.Value
+			}
+		}
+
+		// Si toujours pas de token, rediriger vers la page de connexion pour les pages HTML
+		// ou renvoyer une erreur 401 pour les requêtes API
+		if tokenString == "" {
+			if strings.HasPrefix(r.URL.Path, "/api/") {
+				http.Error(w, "Authorization header required", http.StatusUnauthorized)
+			} else {
+				http.Redirect(w, r, "/", http.StatusSeeOther)
+			}
 			return
 		}
 
-		bearerToken := strings.Split(authHeader, " ")
-		if len(bearerToken) != 2 {
-			http.Error(w, "Invalid token format", http.StatusUnauthorized)
-			return
-		}
-
-		tokenStr := bearerToken[1]
 		claims := &Claims{}
-
-		token, err := jwt.ParseWithClaims(tokenStr, claims, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 			return []byte(configs.AppConfig.JWT.Secret), nil
 		})
 
-		if err != nil {
-			if err == jwt.ErrSignatureInvalid {
-				http.Error(w, "Invalid token signature", http.StatusUnauthorized)
-				return
+		if err != nil || !token.Valid {
+			if strings.HasPrefix(r.URL.Path, "/api/") {
+				http.Error(w, "Invalid token", http.StatusUnauthorized)
+			} else {
+				http.Redirect(w, r, "/", http.StatusSeeOther)
 			}
-			http.Error(w, "Invalid token", http.StatusUnauthorized)
-			return
-		}
-
-		if !token.Valid {
-			http.Error(w, "Invalid token", http.StatusUnauthorized)
 			return
 		}
 
@@ -69,4 +81,19 @@ func GetUserID(r *http.Request) (int64, bool) {
 func GetUsername(r *http.Request) (string, bool) {
 	username, ok := r.Context().Value("username").(string)
 	return username, ok
+}
+
+// IsAdmin vérifie si l'utilisateur est un administrateur
+func IsAdmin(r *http.Request) bool {
+	userID, ok := GetUserID(r)
+	if !ok {
+		return false
+	}
+
+	user, err := database.GetUserByID(userID)
+	if err != nil || user == nil {
+		return false
+	}
+
+	return user.Role == "admin"
 }
