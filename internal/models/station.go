@@ -8,6 +8,8 @@ type Station struct {
 	Longitude      float64 `json:"longitude"`
 	TotalSlots     int     `json:"total_slots"`
 	AvailableBikes int     `json:"available_bikes"`
+	ElectricBikes  int     `json:"electric_bikes"`
+	ClassicBikes   int     `json:"classic_bikes"`
 	Status         string  `json:"status"` // "operational", "maintenance", "offline"
 }
 

@@ -17,6 +17,8 @@ type Station struct {
 	Longitude      float64 `json:"longitude"`
 	TotalSlots     int     `json:"totalSlots"`
 	AvailableBikes int     `json:"availableBikes"`
+	ElectricBikes  int     `json:"electricBikes"`
+	ClassicBikes   int     `json:"classicBikes"`
 	Status         string  `json:"status"`
 }
 
@@ -32,6 +34,8 @@ func GetStations(w http.ResponseWriter, r *http.Request) {
 			Longitude:      -0.57918,
 			TotalSlots:     20,
 			AvailableBikes: 15,
+			ElectricBikes:  8,
+			ClassicBikes:   7,
 			Status:         "operational",
 		},
 		{
@@ -42,6 +46,8 @@ func GetStations(w http.ResponseWriter, r *http.Request) {
 			Longitude:      -0.574502,
 			TotalSlots:     30,
 			AvailableBikes: 8,
+			ElectricBikes:  5,
+			ClassicBikes:   3,
 			Status:         "operational",
 		},
 	}

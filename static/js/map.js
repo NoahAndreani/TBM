@@ -71,12 +71,11 @@ function createStationPopup(station) {
         <div class="station-popup">
             <h5>${station.name}</h5>
             <p>${station.address}</p>
-            <div class="station-status">
-                <strong>Vélos disponibles:</strong> ${station.availableBikes} / ${station.totalSlots}
-            </div>
-            <div class="station-status">
-                <strong>État:</strong> ${station.status === 'operational' ? 'En service' : 'Hors service'}
-            </div>
+            <div class="station-status"><strong>Vélos disponibles:</strong> ${station.availableBikes} / ${station.totalSlots}</div>
+            <div class="station-status"><strong>Vélos électriques:</strong> ${station.electricBikes}</div>
+            <div class="station-status"><strong>Vélos classiques:</strong> ${station.classicBikes}</div>
+            <div class="station-status"><strong>État:</strong> ${station.status === 'operational' ? 'En service' : 'Hors service'}</div>
+            <div class="mt-2"><a href="/stations?station=${encodeURIComponent(station.id)}&showDetails=true" class="text-primary text-decoration-underline" style="cursor:pointer;">Voir plus</a></div>
         </div>
     `;
 }

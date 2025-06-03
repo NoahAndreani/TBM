@@ -72,29 +72,45 @@
         <!-- Template pour l'affichage en liste -->
         <template id="stationListTemplate">
             <div class="col-12 mb-3">
-                <div class="card">
+                <div class="card station-card">
                     <div class="card-body">
-                        <div class="row">
+                        <div class="row align-items-center">
                             <div class="col-md-4">
-                                <h5 class="card-title"></h5>
-                                <p class="card-text address"></p>
+                                <h5 class="card-title mb-2"></h5>
+                                <p class="card-text address text-muted mb-0">
+                                    <i class="bi bi-geo-alt"></i>
+                                    <span></span>
+                                </p>
                             </div>
                             <div class="col-md-3">
                                 <div class="availability">
-                                    <div class="progress mb-2">
+                                    <div class="progress mb-2" style="height: 8px;">
                                         <div class="progress-bar" role="progressbar"></div>
                                     </div>
-                                    <small class="text-muted bikes-info"></small>
+                                    <small class="text-muted bikes-info d-flex align-items-center">
+                                        <i class="bi bi-bicycle me-2"></i>
+                                        <span></span>
+                                    </small>
                                 </div>
                             </div>
                             <div class="col-md-3">
                                 <div class="stats">
-                                    <p class="mb-1 popularity"></p>
-                                    <p class="mb-1 peak-hours"></p>
+                                    <p class="mb-1 popularity d-flex align-items-center">
+                                        <i class="bi bi-graph-up me-2"></i>
+                                        <span></span>
+                                    </p>
+                                    <p class="mb-1 peak-hours d-flex align-items-center">
+                                        <i class="bi bi-clock me-2"></i>
+                                        <span></span>
+                                    </p>
                                 </div>
                             </div>
-                            <div class="col-md-2">
-                                <div class="status-badge"></div>
+                            <div class="col-md-2 text-end">
+                                <div class="status-badge mb-2"></div>
+                                <button class="btn btn-outline-primary btn-sm w-100 view-details">
+                                    <i class="bi bi-info-circle me-1"></i>
+                                    Détails
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -105,25 +121,121 @@
         <!-- Template pour l'affichage en grille -->
         <template id="stationGridTemplate">
             <div class="col-md-4 mb-3">
-                <div class="card h-100">
+                <div class="card h-100 station-card">
                     <div class="card-body">
-                        <h5 class="card-title"></h5>
-                        <p class="card-text address"></p>
+                        <h5 class="card-title mb-2"></h5>
+                        <p class="card-text address text-muted mb-3">
+                            <i class="bi bi-geo-alt"></i>
+                            <span></span>
+                        </p>
                         <div class="availability mb-3">
-                            <div class="progress mb-2">
+                            <div class="progress mb-2" style="height: 8px;">
                                 <div class="progress-bar" role="progressbar"></div>
                             </div>
-                            <small class="text-muted bikes-info"></small>
+                            <small class="text-muted bikes-info d-flex align-items-center">
+                                <i class="bi bi-bicycle me-2"></i>
+                                <span></span>
+                            </small>
                         </div>
-                        <div class="stats">
-                            <p class="mb-1 popularity"></p>
-                            <p class="mb-1 peak-hours"></p>
+                        <div class="stats mb-3">
+                            <p class="mb-1 popularity d-flex align-items-center">
+                                <i class="bi bi-graph-up me-2"></i>
+                                <span></span>
+                            </p>
+                            <p class="mb-1 peak-hours d-flex align-items-center">
+                                <i class="bi bi-clock me-2"></i>
+                                <span></span>
+                            </p>
                         </div>
-                        <div class="status-badge mt-2"></div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="status-badge"></div>
+                            <button class="btn btn-outline-primary btn-sm view-details">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Détails
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </template>
+
+        <!-- Popup de détails de la station -->
+        <div class="modal fade" id="stationDetailsModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header bg-light">
+                        <h5 class="modal-title"></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="station-details">
+                            <div class="address-section mb-4">
+                                <h6 class="text-primary mb-2">
+                                    <i class="bi bi-geo-alt me-2"></i>
+                                    Adresse
+                                </h6>
+                                <p class="station-address mb-0"></p>
+                            </div>
+                            
+                            <div class="bikes-details mb-4">
+                                <h6 class="text-primary mb-3">
+                                    <i class="bi bi-bicycle me-2"></i>
+                                    Types de vélos disponibles
+                                </h6>
+                                <div class="electric-bikes-info mb-3 p-3 bg-light rounded">
+                                    <div class="d-flex align-items-center">
+                                        <span class="me-3 fs-4">⚡</span>
+                                        <div>
+                                            <strong>Vélos électriques</strong>
+                                            <div class="text-muted mt-1"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="classic-bikes-info p-3 bg-light rounded">
+                                    <div class="d-flex align-items-center">
+                                        <span class="me-3 fs-4">🚲</span>
+                                        <div>
+                                            <strong>Vélos classiques</strong>
+                                            <div class="text-muted mt-1"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="station-stats mb-4">
+                                <h6 class="text-primary mb-3">
+                                    <i class="bi bi-graph-up me-2"></i>
+                                    Statistiques
+                                </h6>
+                                <div class="p-3 bg-light rounded">
+                                    <p class="average-usage mb-2 d-flex align-items-center">
+                                        <i class="bi bi-speedometer2 me-2"></i>
+                                        <span></span>
+                                    </p>
+                                    <p class="peak-hours mb-0 d-flex align-items-center">
+                                        <i class="bi bi-clock me-2"></i>
+                                        <span></span>
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="station-status">
+                                <h6 class="text-primary mb-3">
+                                    <i class="bi bi-info-circle me-2"></i>
+                                    État de la station
+                                </h6>
+                                <div class="p-3 bg-light rounded">
+                                    <p class="status-info mb-0 d-flex align-items-center">
+                                        <i class="bi bi-check-circle me-2"></i>
+                                        <span></span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Modals de connexion et d'inscription -->
