@@ -85,6 +85,12 @@ func main() {
 		http.ServeFile(w, r, "templates/profile.html")
 	}).Methods("GET")
 
+	// Handler 404 personnalisé
+	r.NotFoundHandler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+		http.ServeFile(w, r, "templates/404.html")
+	})
+
 	// Démarrage du serveur
 	addr := configs.AppConfig.Server.Host + ":" + configs.AppConfig.Server.Port
 	log.Printf("Serveur démarré sur http://%s\n", addr)
