@@ -220,19 +220,18 @@ function showStationDetails(station) {
     `;
 
     // Ajout du bouton de redirection vers la carte
-    const mapButtonContainer = modal.querySelector('.map-button-container');
-    if (!mapButtonContainer) {
-        const mapButton = document.createElement('div');
-        mapButton.className = 'mt-4 text-center map-button-container';
-        mapButton.innerHTML = `
-            <a href="/?station=${encodeURIComponent(station.id)}&showPopup=true" 
-               class="btn btn-primary">
-                <i class="bi bi-map me-2"></i>
-                Voir sur la carte
-            </a>
-        `;
-        modal.querySelector('.station-details').appendChild(mapButton);
-    }
+    const oldMapButton = modal.querySelector('.map-button-container');
+    if (oldMapButton) oldMapButton.remove();
+    const mapButton = document.createElement('div');
+    mapButton.className = 'mt-4 text-center map-button-container';
+    mapButton.innerHTML = `
+        <a href="/?station=${encodeURIComponent(station.id)}&showPopup=true" 
+           class="btn btn-primary">
+            <i class="bi bi-map me-2"></i>
+            Voir sur la carte
+        </a>
+    `;
+    modal.querySelector('.station-details').appendChild(mapButton);
 
     // Affichage du modal
     const modalInstance = new bootstrap.Modal(modal);
