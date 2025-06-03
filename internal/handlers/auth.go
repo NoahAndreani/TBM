@@ -40,12 +40,17 @@ type ErrorResponse struct {
 func Register(w http.ResponseWriter, r *http.Request) {
 	var req RegisterRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		log.Printf("Erreur décodage requête: %v", err)
 		sendError(w, "Format de requête invalide", nil, http.StatusBadRequest)
 		return
 	}
 
+	// Log des données reçues (sans le mot de passe)
+	log.Printf("Tentative d'inscription pour l'utilisateur: %s, email: %s", req.Username, req.Email)
+
 	// Validation des champs
 	if validationErrors := utils.GetValidationErrors(req.Username, req.Email, req.Password); len(validationErrors) > 0 {
+		log.Printf("Erreurs de validation pour l'utilisateur %s: %v", req.Username, validationErrors)
 		sendError(w, "Erreurs de validation", validationErrors, http.StatusBadRequest)
 		return
 	}
@@ -58,6 +63,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if existingUser != nil {
+		log.Printf("Tentative d'inscription avec un nom d'utilisateur déjà utilisé: %s", req.Username)
 		sendError(w, "Ce nom d'utilisateur est déjà utilisé", nil, http.StatusConflict)
 		return
 	}
@@ -70,6 +76,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if existingEmail != nil {
+		log.Printf("Tentative d'inscription avec un email déjà utilisé: %s", req.Email)
 		sendError(w, "Cette adresse email est déjà utilisée", nil, http.StatusConflict)
 		return
 	}
@@ -110,10 +117,22 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sendJSON(w, AuthResponse{
+	// Préparation de la réponse
+	response := AuthResponse{
 		Token: token,
 		User:  *user,
-	})
+	}
+
+	// Log de la réponse (sans données sensibles)
+	log.Printf("Inscription réussie pour l'utilisateur: %s (ID: %d)", user.Username, user.ID)
+
+	// Envoi de la réponse
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("Erreur encodage réponse: %v, response: %+v", err, response)
+		sendError(w, "Erreur lors de la génération de la réponse", nil, http.StatusInternalServerError)
+		return
+	}
 }
 
 // Login gère la connexion d'un utilisateur
@@ -198,14 +217,23 @@ func generateToken(user *models.User) (string, error) {
 // Helpers pour envoyer les réponses
 func sendJSON(w http.ResponseWriter, data interface{}) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(data)
+	if err := json.NewEncoder(w).Encode(data); err != nil {
+		log.Printf("Erreur lors de l'encodage JSON: %v, data: %+v", err, data)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(ErrorResponse{
+			Message: "Erreur lors de la génération de la réponse",
+		})
+		return
+	}
 }
 
 func sendError(w http.ResponseWriter, message string, errors map[string]string, status int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(ErrorResponse{
+	if err := json.NewEncoder(w).Encode(ErrorResponse{
 		Message: message,
 		Errors:  errors,
-	})
+	}); err != nil {
+		log.Printf("Erreur lors de l'encodage JSON de l'erreur: %v", err)
+	}
 }

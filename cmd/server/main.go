@@ -43,6 +43,10 @@ func main() {
 	r.HandleFunc("/api/stations", handlers.GetStations)
 	r.HandleFunc("/api/news", handlers.GetNews)
 
+	// Routes d'authentification
+	r.HandleFunc("/api/auth/login", handlers.Login).Methods("POST")
+	r.HandleFunc("/api/auth/register", handlers.Register).Methods("POST")
+
 	// API Routes protégées
 	api := r.PathPrefix("/api").Subrouter()
 	api.Use(middleware.AuthMiddleware)
