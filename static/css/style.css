@@ -261,4 +261,9 @@ body {
 
 #levelRewards i {
     font-size: 1.2rem;
+}
+
+/* Détails de la station (modale) */
+.station-details, .station-details * {
+    color: #222 !important;
 } 

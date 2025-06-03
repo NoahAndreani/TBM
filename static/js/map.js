@@ -151,8 +151,35 @@ function toRad(value) {
     return value * Math.PI / 180;
 }
 
+// Fonction utilitaire pour lire les paramètres d'URL
+function getUrlParam(name) {
+    const params = new URLSearchParams(window.location.search);
+    return params.get(name);
+}
+
 // Chargement initial des stations
-loadStations();
+loadStations().then(() => {
+    const stationId = getUrlParam('station');
+    const showPopup = getUrlParam('showPopup');
+    if (stationId && showPopup) {
+        // On attend que les marqueurs soient bien chargés
+        setTimeout(() => {
+            fetch('/api/stations')
+                .then(res => res.json())
+                .then(stations => {
+                    const station = stations.find(s => String(s.id) === String(stationId));
+                    if (station) {
+                        map.setView([station.latitude, station.longitude], 17);
+                        const marker = stationMarkers.find(m =>
+                            m.getLatLng().lat === station.latitude &&
+                            m.getLatLng().lng === station.longitude
+                        );
+                        if (marker) marker.openPopup();
+                    }
+                });
+        }, 500);
+    }
+});
 
 // Rafraîchissement des stations toutes les 30 secondes
 setInterval(loadStations, 30000); 
